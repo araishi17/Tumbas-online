@@ -1,0 +1,31 @@
+{
+  "name": "tumbas-online",
+  "version": "1.0.0",
+  "description": "Marketplace UMKM Desa - Tumbas Online",
+  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/web-client",
+    "apps/web-admin",
+    "apps/mobile-app",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": [
+    "marketplace",
+    "umkm",
+    "desa",
+    "ecommerce"
+  ],
+  "author": "araishi17",
+  "license": "MIT"
+}

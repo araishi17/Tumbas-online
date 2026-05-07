@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: tumbas-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: tumbas-online
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - tumbas-network
+
+  mongodb-express:
+    image: mongo-express:latest
+    container_name: tumbas-mongo-express
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+      ME_CONFIG_MONGODB_URL: mongodb://root:root@mongodb:27017/
+      ME_CONFIG_BASICAUTH: false
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongodb
+    networks:
+      - tumbas-network
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: tumbas-api
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://root:root@mongodb:27017/tumbas-online
+      JWT_SECRET: development_secret_key
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongodb
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+    networks:
+      - tumbas-network
+
+  web-client:
+    build:
+      context: ./apps/web-client
+      dockerfile: Dockerfile
+    container_name: tumbas-web-client
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks:
+      - tumbas-network
+
+  web-admin:
+    build:
+      context: ./apps/web-admin
+      dockerfile: Dockerfile
+    container_name: tumbas-web-admin
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    ports:
+      - "3002:3000"
+    depends_on:
+      - api
+    networks:
+      - tumbas-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: tumbas-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - api
+      - web-client
+      - web-admin
+    networks:
+      - tumbas-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  tumbas-network:
+    driver: bridge
